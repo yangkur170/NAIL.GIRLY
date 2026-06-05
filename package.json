@@ -1,0 +1,13 @@
+{
+  "name": "nail-girly",
+  "version": "1.0.0",
+  "description": "Y2K Aesthetic Nails - Shop & Admin Panel",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "MIT"
+}

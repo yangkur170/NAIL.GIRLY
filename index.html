@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Y2K Aesthetic Nails | Modern Supply</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/10.16.4/framer-motion.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --milk: #FFFDF5;
+            --y2k-pink: #FF8AD8;
+            --soft-pink: #FFD1E3;
+            --accent-blue: #A0E9FF;
+        }
+
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background-color: var(--milk);
+            color: #333;
+            scroll-behavior: smooth;
+        }
+
+        h1, h2, h3, .y2k-font {
+            font-family: 'Syne', sans-serif;
+        }
+
+        .glass-nav {
+            background: rgba(255, 253, 245, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 2px solid var(--y2k-pink);
+        }
+
+        .product-card {
+            background: white;
+            border: 2px solid #eee;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .product-card:hover {
+            border-color: var(--y2k-pink);
+            transform: translateY(-10px) rotate(1deg);
+            box-shadow: 10px 10px 0px var(--soft-pink);
+        }
+
+        .y2k-btn {
+            background: var(--y2k-pink);
+            box-shadow: 4px 4px 0px #000;
+            transition: 0.2s;
+        }
+
+        .y2k-btn:active {
+            box-shadow: 0px 0px 0px #000;
+            transform: translate(4px, 4px);
+        }
+
+        .cart-drawer {
+            transition: transform 0.3s ease-in-out;
+            transform: translateX(100%);
+        }
+
+        .cart-drawer.open {
+            transform: translateX(0);
+        }
+
+        .category-pill:hover {
+            background-color: var(--y2k-pink);
+            color: white;
+        }
+
+        /* បែបផែនអក្សររត់ */
+        .marquee {
+            overflow: hidden;
+            white-space: nowrap;
+            background: var(--y2k-pink);
+            padding: 10px 0;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+        }
+        
+        .animate-marquee {
+            display: inline-block;
+            animation: marquee 20s linear infinite;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Admin Styles */
+        .admin-only { display: none; }
+        body.admin-mode .admin-only { display: flex; }
+        body.admin-mode .product-card { border-style: dashed; border-color: var(--y2k-pink); }
+
+        #admin-modal {
+            background: rgba(0,0,0,0.4);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.8); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pop {
+            animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Announcement Bar -->
+    <div class="marquee font-bold uppercase text-sm tracking-tighter italic">
+        <span class="inline-block animate-marquee italic text-white">
+            ✨ Free Shipping on orders over $50 🎀 New Y2K Collection Out Now 💅 Best Quality Press-ons ✨ Free Shipping on orders over $50 🎀 
+        </span>
+    </div>
+
+    <!-- Navigation (ប្រព័ន្ធដូច Dynamic Supply) -->
+    <nav class="glass-nav sticky top-0 z-50 px-6 py-4">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div class="text-3xl font-black italic tracking-tighter text-pink-500">
+                NAIL<span class="text-blue-400">.GIRLY</span>
+            </div>
+            
+            <ul class="hidden md:flex gap-8 font-bold uppercase text-xs tracking-widest">
+                <li class="cursor-pointer hover:text-pink-500">All Products</li>
+                <li class="cursor-pointer hover:text-pink-500">Gel Polish</li>
+                <li class="cursor-pointer hover:text-pink-500">Kits</li>
+                <li class="cursor-pointer hover:text-pink-500">Sale</li>
+            </ul>
+
+            <div class="flex items-center gap-5">
+                <button class="relative" onclick="toggleCart()">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    <span id="cart-count" class="absolute -top-2 -right-2 bg-pink-500 text-white text-[10px] w-5 h-5 rounded-full flex items-center justify-center font-bold">0</span>
+                </button>
+                <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">☰</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Menu Overlay -->
+    <div id="mobile-menu" class="fixed inset-0 bg-white z-[60] flex flex-col items-center justify-center space-y-8 text-2xl font-bold uppercase tracking-widest transition-transform transform translate-x-full md:hidden">
+        <button onclick="toggleMobileMenu()" class="absolute top-8 right-8 text-4xl">&times;</button>
+        <a href="#" onclick="toggleMobileMenu()" class="hover:text-pink-500">All Products</a>
+        <a href="#" onclick="toggleMobileMenu()" class="hover:text-pink-500">Gel Polish</a>
+        <a href="#" onclick="toggleMobileMenu()" class="hover:text-pink-500">Kits</a>
+        <a href="#" onclick="toggleMobileMenu()" class="hover:text-pink-500">Sale</a>
+    </div>
+
+    <!-- Hero Section -->
+    <header class="py-16 px-6 text-center bg-[#FFF9FB]">
+        <h2 class="text-pink-400 uppercase font-bold tracking-[0.3em] mb-4">The Modern Supply for Cool Girls</h2>
+        <h1 class="text-4xl sm:text-6xl md:text-8xl font-black italic mb-6 leading-tight">
+            SOFT <span class="text-transparent" style="-webkit-text-stroke: 1.5px #FF8AD8;">CREAMY</span> <br>VIBES
+        </h1>
+        <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
+            <button class="y2k-btn px-8 py-3 text-white font-bold uppercase text-sm sm:text-base">Shop Collection</button>
+            <button class="border-2 border-black px-8 py-3 font-bold uppercase hover:bg-black hover:text-white transition text-sm sm:text-base">New Arrivals</button>
+        </div>
+    </header>
+
+    <!-- Categories Filters -->
+    <div class="max-w-7xl mx-auto px-6 py-6 flex gap-4 overflow-x-auto no-scrollbar" id="category-filters">
+        <button class="category-pill whitespace-nowrap border-2 border-black px-6 py-2 rounded-full font-bold uppercase text-xs" data-category="All Styles">All Styles</button>
+        <button class="category-pill whitespace-nowrap border-2 border-gray-200 px-6 py-2 rounded-full font-bold uppercase text-xs text-gray-500" data-category="Cyber Chrome">Cyber Chrome</button>
+        <button class="category-pill whitespace-nowrap border-2 border-gray-200 px-6 py-2 rounded-full font-bold uppercase text-xs text-gray-500" data-category="Milk Creamy">Milk Creamy</button>
+        <button class="category-pill whitespace-nowrap border-2 border-gray-200 px-6 py-2 rounded-full font-bold uppercase text-xs text-gray-500" data-category="Pink Butterfly">Pink Butterfly</button>
+    </div>
+
+    <main class="max-w-7xl mx-auto px-6 py-10">
+        <!-- Admin Section (Hidden by default) -->
+        <div class="mb-8 admin-only">
+            <button onclick="openAdminModal()" class="w-full py-6 border-4 border-dashed border-pink-400 rounded-3xl text-pink-500 font-black italic text-xl hover:bg-pink-50 transition">
+                + បន្ថែមផលិតផលថ្មី (Staff Only)
+            </button>
+        </div>
+        <!-- Product Grid -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8" id="product-grid"></div>
+    </main>
+    
+    <!-- Cart Drawer -->
+    <div id="cart-drawer" class="cart-drawer fixed top-0 right-0 h-full w-full md:w-96 bg-white z-[100] shadow-2xl p-6 sm:p-8 flex flex-col border-l-2 border-pink-500">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-black italic uppercase">Your Bag</h2>
+            <button onclick="toggleCart()" class="text-3xl">&times;</button>
+        </div>
+        
+        <div id="cart-items" class="flex-grow overflow-y-auto space-y-4">
+            <!-- Items appear here -->
+            <p class="text-gray-400 italic">Your bag is empty...</p>
+        </div>
+
+        <div class="border-t-2 border-dashed border-gray-200 pt-6 mt-6">
+            <div class="flex justify-between mb-4 font-bold text-xl">
+                <span>Total:</span>
+                <span id="cart-total">$0.00</span>
+            </div>
+            <button onclick="openCheckout()" class="y2k-btn w-full py-4 text-white font-black uppercase tracking-widest">Checkout Now</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="checkout-modal" class="fixed inset-0 z-[600] hidden flex items-center justify-center p-4 backdrop-blur-sm bg-black/20">
+        <div class="bg-white w-full max-w-md rounded-[40px] p-6 sm:p-10 border-4 border-black shadow-[10px_10px_0px_#A0E9FF] relative animate-pop max-h-[90vh] overflow-y-auto">
+            <button onclick="closeCheckout()" class="absolute top-6 right-6 text-2xl font-black">&times;</button>
+            
+            <!-- Step 1: Info -->
+            <div id="checkout-step-1">
+                <h2 class="text-3xl font-black italic uppercase mb-2 text-blue-400">Checkout</h2>
+                <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-8">Step 1: Delivery Info</p>
+                <div class="space-y-4">
+                    <input type="text" id="checkout-name" placeholder="Full Name" class="w-full border-2 border-black p-4 rounded-2xl focus:outline-blue-400 font-bold">
+                    <input type="tel" id="checkout-phone" placeholder="Phone Number" class="w-full border-2 border-black p-4 rounded-2xl focus:outline-blue-400 font-bold">
+                    <select id="checkout-city" class="w-full border-2 border-black p-4 rounded-2xl focus:outline-blue-400 font-bold bg-white">
+                        <option value="">Select City (Cambodia)</option>
+                        <option value="Phnom Penh">Phnom Penh</option>
+                        <option value="Siem Reap">Siem Reap</option>
+                        <option value="Sihanoukville">Sihanoukville</option>
+                        <option value="Battambang">Battambang</option>
+                        <option value="Kampot">Kampot</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="relative">
+                        <input type="text" id="checkout-location" placeholder="Location Coordinates" class="w-full border-2 border-black p-4 rounded-2xl focus:outline-blue-400 font-bold bg-gray-50" readonly>
+                        <button type="button" onclick="getCurrentLocation(event)" class="absolute right-2 top-2 bottom-2 px-4 bg-blue-400 text-white font-bold rounded-xl text-xs hover:bg-blue-500 transition">📍 Pin Me</button>
+                    </div>
+                    <p class="text-[10px] text-gray-400 font-bold uppercase px-2 italic text-center">* Overseas shipping available upon request.</p>
+                </div>
+                <button onclick="goToCheckoutStep(2)" class="y2k-btn w-full py-4 text-white font-black uppercase rounded-2xl mt-8 tracking-widest" style="background: var(--accent-blue);">Next: Payment</button>
+            </div>
+
+            <!-- Step 2: Payment -->
+            <div id="checkout-step-2" class="hidden">
+                <h2 class="text-3xl font-black italic uppercase mb-2 text-pink-500">Payment</h2>
+                <p class="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">Step 2: Scan & Upload Receipt</p>
+                
+                <div class="flex gap-4 mb-6">
+                    <div class="flex-1 text-center">
+                        <div class="aspect-square bg-[#005da4] rounded-2xl mb-2 flex items-center justify-center border-2 border-black p-2 sm:p-4 overflow-hidden">
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c0/ABA_Bank_logo.svg/512px-ABA_Bank_logo.svg.png" alt="ABA Bank" class="w-full h-auto object-contain brightness-0 invert">
+                        </div>
+                        <p class="text-[10px] font-black uppercase">ABA BANK</p>
+                    </div>
+                    <div class="flex-1 text-center">
+                        <div class="aspect-square bg-[#f6c90e] rounded-2xl mb-2 flex items-center justify-center border-2 border-black p-2 sm:p-4 overflow-hidden">
+                            <img src="https://upload.wikimedia.org/wikipedia/en/thumb/5/5e/Wing_Bank_logo.png/512px-Wing_Bank_logo.png" alt="Wing Bank" class="w-full h-auto object-contain">
+                        </div>
+                        <p class="text-[10px] font-black uppercase">Wing Bank</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-[10px] font-bold uppercase text-gray-400 px-2 text-center">Upload Screenshot of Receipt</label>
+                    <input type="file" id="receipt-file" accept="image/*" class="w-full border-2 border-black p-3 rounded-2xl focus:outline-pink-500 font-bold text-sm bg-white">
+                </div>
+
+                <div class="flex gap-4 mt-8">
+                    <button onclick="goToCheckoutStep(1)" class="px-6 py-4 border-2 border-black font-bold uppercase rounded-2xl text-xs">Back</button>
+                    <button onclick="confirmCheckout()" class="y2k-btn flex-grow py-4 text-white font-black uppercase rounded-2xl tracking-widest">Confirm Order</button>
+                </div>
+            </div>
+
+            <!-- Step 3: Success -->
+            <div id="checkout-step-3" class="hidden text-center py-6">
+                <div class="text-6xl mb-6">🎀✨💅</div>
+                <h2 class="text-4xl font-black italic uppercase mb-4 text-pink-500">Thank You!</h2>
+                <p class="font-bold text-gray-500 mb-8 uppercase tracking-widest leading-relaxed px-4">Your order has been placed!<br>Our staff will verify your payment soon.</p>
+                <button onclick="closeCheckout()" class="y2k-btn w-full py-4 text-white font-black uppercase rounded-2xl tracking-widest">Back to Shop</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Success Alert Popout -->
+    <div id="custom-alert" class="fixed inset-0 z-[700] hidden flex items-center justify-center p-4 backdrop-blur-sm bg-black/20">
+        <div class="bg-white w-full max-w-[320px] rounded-[40px] p-8 border-4 border-black shadow-[10px_10px_0px_#FF8AD8] text-center animate-pop">
+            <div id="alert-emoji" class="text-5xl mb-4">🎀</div>
+            <h3 id="alert-title" class="text-2xl font-black italic uppercase mb-2 text-pink-500">Yay!</h3>
+            <p id="alert-sub" class="text-gray-500 text-sm mb-2 uppercase font-bold tracking-widest">Added to Bag</p>
+            <p id="alert-product-name" class="font-bold text-lg text-black mb-6 leading-tight"></p>
+            <button onclick="closeCustomAlert()" class="y2k-btn w-full py-4 text-white font-black uppercase rounded-2xl text-sm tracking-widest">Close</button>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-black text-white py-20 px-6 mt-20">
+        <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-12">
+            <div>
+                <h4 class="text-2xl font-black italic text-pink-500 mb-6 uppercase">About Us</h4>
+                <p class="text-gray-400 leading-relaxed"> provide high-quality Y2K style press-on nails for the modern aesthetic generation. Designed with love.</p>
+            </div>
+            <div>
+                <h4 class="text-xl font-bold mb-6 uppercase tracking-widest text-blue-400">Quick Links</h4>
+                <ul class="space-y-3 text-gray-400 font-bold uppercase text-xs">
+                    <li><a href="#" class="hover:text-pink-500">Shipping Policy</a></li>
+                    <li><a href="#" class="hover:text-pink-500">Returns & Exchange</a></li>
+                    <li><a href="#" class="hover:text-pink-500">Wholesale</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="text-xl font-bold mb-6 uppercase tracking-widest text-pink-400">Join the Club</h4>
+                <input type="text" placeholder="Enter Email" class="w-full bg-transparent border-b-2 border-white py-2 mb-4 focus:outline-none focus:border-pink-500">
+                <button class="text-sm font-black uppercase underline hover:text-pink-500 transition">Subscribe</button>
+                <div class="mt-8 text-right">
+                    <button onclick="window.location.href='admin.html'" class="text-[10px] text-gray-600 hover:text-pink-500 uppercase tracking-[0.2em] font-bold">🔒 Staff Login</button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // --- Product Data ---
+        let baseProducts = [
+            { name: 'Milk Marble Pink', price: 22.00, desc: 'Modern Y2K Aesthetic', img: 'https://placehold.co/400x400/FFD1E3/FF8AD8?text=Soft+Nails', category: 'Milk Creamy' },
+            { name: 'Cyber Blue Star', price: 18.50, desc: 'Holographic Finish', img: 'https://placehold.co/400x400/A0E9FF/333?text=Blue+Chrome', category: 'Cyber Chrome' },
+            { name: 'Creamy Pearl', price: 25.00, desc: 'Elegant & Clean', img: 'https://placehold.co/400x400/FFF9FB/FF8AD8?text=Creamy+White', category: 'Milk Creamy' },
+            { name: 'Pink Heart 3D', price: 20.00, desc: 'Kawaii Y2K Style', img: 'https://placehold.co/400x400/E3D1FF/333?text=Heart+Nails', category: 'Pink Butterfly' }
+        ];
+
+        // Generate 200 products if localStorage is empty or has less than 200
+        const categoriesForGeneration = ["Cyber Chrome", "Milk Creamy", "Pink Butterfly"];
+        let categoryGenIndex = 0;
+        if (baseProducts.length < 200) {
+            for (let i = baseProducts.length + 1; i <= 200; i++) {
+                baseProducts.push({
+                    name: `Nail Style #${i}`,
+                    price: parseFloat((12 + Math.random() * 18).toFixed(2)),
+                    desc: 'Modern Y2K Aesthetic Supply',
+                    img: `https://placehold.co/400x400/FFD1E3/FF8AD8?text=Style+${i}`,
+                    category: categoriesForGeneration[categoryGenIndex % categoriesForGeneration.length]
+                });
+                categoryGenIndex++;
+            }
+        }
+
+        let products = JSON.parse(localStorage.getItem('y2k_products')) || baseProducts;
+        let cart = [];
+        let selectedImageData = ""; // To store base64 image data
+        let currentFilterCategory = "All Styles"; // Default filter
+
+        // --- Initialization ---
+        window.onload = () => { 
+            renderProducts(); 
+            updateCart();
+            setupCategoryFilters();
+            updateCategoryPillStyles();
+        };
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            menu.classList.toggle('translate-x-full');
+        }
+
+        // --- Checkout System ---
+        function openCheckout() {
+            if (cart.length === 0) {
+                showCustomAlert('Oops!', 'Bag Empty', 'Add some nails first! 💅', '🎀');
+                return;
+            }
+            document.getElementById('cart-drawer').classList.remove('open');
+            document.getElementById('checkout-modal').classList.remove('hidden');
+            goToCheckoutStep(1);
+        }
+
+        function closeCheckout() {
+            document.getElementById('checkout-modal').classList.add('hidden');
+            // Reset fields
+            document.getElementById('checkout-name').value = '';
+            document.getElementById('checkout-phone').value = '';
+            document.getElementById('checkout-city').value = '';
+            document.getElementById('checkout-location').value = '';
+            document.getElementById('receipt-file').value = '';
+            userCoordinates = "";
+        }
+
+        let userCoordinates = "";
+        function getCurrentLocation(e) {
+            const btn = e.currentTarget;
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ Locating...";
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        userCoordinates = `https://www.google.com/maps?q=${lat},${lng}`;
+                        document.getElementById('checkout-location').value = `Lat: ${lat.toFixed(4)}, Lng: ${lng.toFixed(4)}`;
+                        btn.innerText = "✅ Pinned";
+                        btn.style.backgroundColor = "#4ADE80"; // Success green
+                    },
+                    (error) => {
+                        showCustomAlert('Error!', 'Location Denied', 'Please check your GPS permissions.', '📍');
+                        btn.innerText = originalText;
+                    }
+                );
+            } else {
+                showCustomAlert('Error!', 'Not Supported', 'Your browser is too old for GPS.', '🚫');
+                btn.innerText = originalText;
+            }
+        }
+
+        function goToCheckoutStep(step) {
+            if (step === 2) {
+                const name = document.getElementById('checkout-name').value;
+                const phone = document.getElementById('checkout-phone').value;
+                const city = document.getElementById('checkout-city').value;
+                if (!name || !phone || !city) {
+                    showCustomAlert('Wait!', 'Missing Info', 'Name, Phone, and City are required! 🎀', '✏️');
+                    return;
+                }
+            }
+            document.getElementById('checkout-step-1').classList.add('hidden');
+            document.getElementById('checkout-step-2').classList.add('hidden');
+            document.getElementById('checkout-step-3').classList.add('hidden');
+            document.getElementById('checkout-step-' + step).classList.remove('hidden');
+        }
+
+        function confirmCheckout() {
+            const receiptInput = document.getElementById('receipt-file');
+            if (!receiptInput.files[0]) {
+                showCustomAlert('Payment!', 'Missing Receipt', 'Please upload your receipt to confirm! ✨', '💰');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const newOrder = {
+                    id: Date.now(),
+                    name: document.getElementById('checkout-name').value,
+                    phone: document.getElementById('checkout-phone').value,
+                    city: document.getElementById('checkout-city').value,
+                    location: userCoordinates || 'Not Pinned',
+                    items: [...cart],
+                    total: document.getElementById('cart-total').innerText,
+                    receipt: e.target.result,
+                    date: new Date().toLocaleString()
+                };
+
+                let orders = JSON.parse(localStorage.getItem('y2k_orders')) || [];
+                orders.unshift(newOrder);
+                localStorage.setItem('y2k_orders', JSON.stringify(orders));
+                
+                cart = [];
+                updateCart();
+                goToCheckoutStep(3);
+            };
+            reader.readAsDataURL(receiptInput.files[0]);
+        }
+
+        // --- Core Functions ---
+        function renderProducts() {
+            const grid = document.getElementById('product-grid');
+            let productsToRender = products;
+            if (currentFilterCategory !== "All Styles") {
+                productsToRender = products.filter(p => p.category === currentFilterCategory);
+            }
+
+            grid.innerHTML = productsToRender.map((p, index) => `
+                <div class="product-card p-4 rounded-3xl relative group">
+                    <div class="aspect-square bg-pink-100 rounded-2xl mb-4 overflow-hidden relative">
+                        <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    </div>
+                    <h3 class="font-bold text-lg">${p.name}</h3>
+                    <p class="text-gray-400 text-sm mb-4 italic">${p.desc}</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-xl font-black">$${p.price.toFixed(2)}</span>
+                        <button onclick="addToCart('${p.name}', ${p.price})" class="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition">+</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function setupCategoryFilters() {
+            document.querySelectorAll('.category-pill').forEach(button => {
+                button.addEventListener('click', () => filterProducts(button.dataset.category));
+            });
+        }
+
+        function filterProducts(category) {
+            currentFilterCategory = category;
+            renderProducts();
+            updateCategoryPillStyles();
+        }
+
+        function updateCategoryPillStyles() {
+            document.querySelectorAll('.category-pill').forEach(button => {
+                button.classList.toggle('bg-[var(--y2k-pink)]', button.dataset.category === currentFilterCategory);
+                button.classList.toggle('text-white', button.dataset.category === currentFilterCategory);
+                button.classList.toggle('border-black', button.dataset.category === currentFilterCategory);
+                button.classList.toggle('border-gray-200', button.dataset.category !== currentFilterCategory);
+                button.classList.toggle('text-gray-500', button.dataset.category !== currentFilterCategory);
+            });
+        }
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    selectedImageData = e.target.result; // Store base64 string
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function toggleCart() {
+            document.getElementById('cart-drawer').classList.toggle('open');
+        }
+
+        function addToCart(name, price) {
+            cart.push({ name, price });
+            updateCart();
+            showCustomAlert(name);
+        }
+
+        function showCustomAlert(title, sub, name, emoji = '🎀') {
+            document.getElementById('alert-title').innerText = title;
+            document.getElementById('alert-sub').innerText = sub;
+            document.getElementById('alert-product-name').innerText = name;
+            document.getElementById('alert-emoji').innerText = emoji;
+            document.getElementById('custom-alert').classList.remove('hidden');
+        }
+
+        function closeCustomAlert() {
+            document.getElementById('custom-alert').classList.add('hidden');
+        }
+
+        function updateCart() {
+            const cartItems = document.getElementById('cart-items');
+            const cartCount = document.getElementById('cart-count');
+            const cartTotal = document.getElementById('cart-total');
+            
+            cartCount.innerText = cart.length;
+            
+            if (cart.length === 0) {
+                cartItems.innerHTML = '<p class="text-gray-400 italic">Your bag is empty...</p>';
+                cartTotal.innerText = '$0.00';
+                return;
+            }
+
+            cartItems.innerHTML = cart.map((item, index) => `
+                <div class="flex justify-between items-center bg-pink-50 p-3 rounded-xl border border-pink-200">
+                    <div>
+                        <p class="font-bold text-sm">${item.name}</p>
+                        <p class="text-pink-500 font-mono text-xs">$${item.price.toFixed(2)}</p>
+                    </div>
+                    <button onclick="removeFromCart(${index})" class="text-red-400 text-xs font-bold">Remove</button>
+                </div>
+            `).join('');
+
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            cartTotal.innerText = `$${total.toFixed(2)}`;
+        }
+
+        function removeFromCart(index) {
+            cart.splice(index, 1);
+            updateCart();
+        }
+    </script>
+</body>
+</html>
