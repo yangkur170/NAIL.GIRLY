@@ -23,11 +23,15 @@ Then open http://localhost:3000
 ## Tech
 
 - Plain HTML + Tailwind (CDN)
-- Data stored in browser `localStorage` (no database)
+- Firebase Firestore — real-time products & orders shared across all devices
 - Static server: `server.js` (Node, no dependencies)
 
-## Note
+## Firebase
 
-Products and orders are saved in the **browser's localStorage**, so data is
-per-device/per-browser. For a real multi-user shop you will later need a backend
-database so that customer orders reach the admin on any device.
+Config lives in `firebase-config.js`. Products and customer orders are stored in
+Firestore collections (`products`, `orders`), so orders placed by any customer
+appear instantly in the admin dashboard on any device. Receipt and product
+images are compressed in the browser before being saved.
+
+> Firestore is in **test mode** (open for 30 days). Before going fully live,
+> tighten the security rules in the Firebase console.

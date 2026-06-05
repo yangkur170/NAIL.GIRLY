@@ -6,6 +6,11 @@
     <title>Nail.Girly | Admin Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase (real-time database for products & orders) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     <style>
         :root {
             --milk: #FFFDF5;
@@ -159,7 +164,7 @@
     <div id="form-modal" class="fixed inset-0 z-[600] hidden flex items-center justify-center p-4 backdrop-blur-sm bg-black/20">
         <div class="bg-white w-full max-w-md rounded-[40px] p-6 sm:p-8 border-4 border-black shadow-[10px_10px_0px_#FF8AD8] relative max-h-[90vh] overflow-y-auto">
             <h2 id="form-title" class="text-3xl font-black italic uppercase mb-8 text-pink-500 text-center">Add Product</h2>
-            <input type="hidden" id="edit-index" value="-1">
+            <input type="hidden" id="edit-index" value="">
             <div class="space-y-4">
                 <input type="text" id="p-name" placeholder="Product Name" class="w-full border-2 border-black p-4 rounded-2xl font-bold outline-none">
                 <input type="number" id="p-price" placeholder="Price ($)" class="w-full border-2 border-black p-4 rounded-2xl font-bold outline-none">
@@ -182,34 +187,22 @@
     </div>
 
     <script>
-        // --- Product Data Initialization (Must match index.html) ---
-        let baseProducts = [
+        // --- Live data from Firestore ---
+        let products = [];
+        let orders = [];
+        let selectedImageData = "";
+        let currentFilter = "All Styles";
+        let isOrderView = false;
+        let listenersStarted = false;
+        let seedAttempted = false;
+
+        // The 4 starter products, only used to seed an empty database once.
+        const baseProducts = [
             { name: 'Milk Marble Pink', price: 22.00, desc: 'Modern Y2K Aesthetic', img: 'https://placehold.co/400x400/FFD1E3/FF8AD8?text=Soft+Nails', category: 'Milk Creamy' },
             { name: 'Cyber Blue Star', price: 18.50, desc: 'Holographic Finish', img: 'https://placehold.co/400x400/A0E9FF/333?text=Blue+Chrome', category: 'Cyber Chrome' },
             { name: 'Creamy Pearl', price: 25.00, desc: 'Elegant & Clean', img: 'https://placehold.co/400x400/FFF9FB/FF8AD8?text=Creamy+White', category: 'Milk Creamy' },
             { name: 'Pink Heart 3D', price: 20.00, desc: 'Kawaii Y2K Style', img: 'https://placehold.co/400x400/E3D1FF/333?text=Heart+Nails', category: 'Pink Butterfly' }
         ];
-
-        const categoriesForGeneration = ["Cyber Chrome", "Milk Creamy", "Pink Butterfly"];
-        let categoryGenIndex = 0;
-        if (baseProducts.length < 200) {
-            for (let i = baseProducts.length + 1; i <= 200; i++) {
-                baseProducts.push({
-                    name: `Nail Style #${i}`,
-                    price: parseFloat((12 + Math.random() * 18).toFixed(2)),
-                    desc: 'Modern Y2K Aesthetic Supply',
-                    img: `https://placehold.co/400x400/FFD1E3/FF8AD8?text=Style+${i}`,
-                    category: categoriesForGeneration[categoryGenIndex % categoriesForGeneration.length]
-                });
-                categoryGenIndex++;
-            }
-        }
-
-        let products = JSON.parse(localStorage.getItem('y2k_products')) || baseProducts;
-        let orders = JSON.parse(localStorage.getItem('y2k_orders')) || [];
-        let selectedImageData = "";
-        let currentFilter = "All Styles";
-        let isOrderView = false;
 
         function requestNotifyAndLogin() {
             if ("Notification" in window) {
@@ -223,26 +216,54 @@
             if (pass === 'Roth369') {
                 document.getElementById('login-screen').classList.add('hidden');
                 document.getElementById('dashboard').classList.remove('hidden');
-                renderAdminProducts();
-                renderOrders();
+                startListeners();
             } else {
                 alert("Wrong password! 💅");
             }
         }
 
-        // Watch for new orders from the shop tab
-        window.addEventListener('storage', (e) => {
-            if (e.key === 'y2k_orders') {
-                orders = JSON.parse(e.newValue);
-                if (Notification.permission === "granted") {
-                    new Notification("New Order Received! 🎀", {
-                        body: "A new customer has just placed an order. Check the dashboard!",
-                        icon: "https://placehold.co/100x100/FF8AD8/white?text=💅"
+        function startListeners() {
+            if (listenersStarted) return;
+            listenersStarted = true;
+
+            // Live products
+            db.collection('products').orderBy('createdAt', 'asc').onSnapshot(async (snap) => {
+                products = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                if (snap.empty && !seedAttempted) {
+                    seedAttempted = true;
+                    await seedBaseProducts();
+                    return; // snapshot will fire again with the new products
+                }
+                renderAdminProducts();
+            }, (err) => console.error('Products load failed:', err));
+
+            // Live orders + desktop notification for new ones
+            let firstOrderSnapshot = true;
+            db.collection('orders').orderBy('createdAt', 'desc').onSnapshot((snap) => {
+                orders = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+                if (!firstOrderSnapshot) {
+                    snap.docChanges().forEach((change) => {
+                        if (change.type === 'added' && Notification.permission === 'granted') {
+                            new Notification("New Order Received! 🎀", {
+                                body: "A new customer has just placed an order. Check the dashboard!",
+                                icon: "https://placehold.co/100x100/FF8AD8/white?text=Order"
+                            });
+                        }
                     });
                 }
-                if (isOrderView) renderOrders();
+                firstOrderSnapshot = false;
+                renderOrders();
+            }, (err) => console.error('Orders load failed:', err));
+        }
+
+        async function seedBaseProducts() {
+            for (const p of baseProducts) {
+                await db.collection('products').add({
+                    ...p,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
             }
-        });
+        }
 
         function toggleView() {
             isOrderView = !isOrderView;
@@ -270,12 +291,10 @@
 
         function logout() { location.reload(); }
 
-        function handleFileSelect(event) {
+        async function handleFileSelect(event) {
             const file = event.target.files[0];
             if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => { selectedImageData = e.target.result; };
-                reader.readAsDataURL(file);
+                selectedImageData = await compressImage(file, 800, 0.6);
             }
         }
 
@@ -292,12 +311,11 @@
             let filteredProducts = currentFilter === "All Styles" ? products : products.filter(p => p.category === currentFilter);
 
             grid.innerHTML = filteredProducts.map((p) => {
-                const actualIndex = products.indexOf(p);
                 return `
                 <div class="product-card p-4 rounded-3xl relative group">
                     <div class="absolute top-2 right-2 z-20 flex gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onclick="editProduct(${actualIndex})" class="bg-yellow-400 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] text-sm">✏️</button>
-                        <button onclick="deleteProduct(${actualIndex})" class="bg-red-400 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] text-sm">🗑️</button>
+                        <button onclick="editProduct('${p.id}')" class="bg-yellow-400 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] text-sm">✏️</button>
+                        <button onclick="deleteProduct('${p.id}')" class="bg-red-400 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] text-sm">🗑️</button>
                     </div>
                     <div class="aspect-square bg-pink-100 rounded-2xl mb-4 overflow-hidden relative">
                         <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
@@ -320,7 +338,7 @@
                 return;
             }
 
-            grid.innerHTML = orders.map((o, idx) => `
+            grid.innerHTML = orders.map((o) => `
                 <div class="order-card p-6 flex flex-col md:flex-row gap-6 animate-pop">
                     <div class="w-full md:w-48 aspect-[3/4] border-2 border-black rounded-xl overflow-hidden bg-gray-100">
                         <img src="${o.receipt}" class="w-full h-full object-cover cursor-zoom-in" onclick="window.open(this.src)">
@@ -347,17 +365,16 @@
                         </div>
                     </div>
                     <div class="flex md:flex-col justify-end gap-2">
-                        <button onclick="deleteOrder(${idx})" class="p-4 bg-red-100 text-red-600 border-2 border-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition">🗑️</button>
+                        <button onclick="deleteOrder('${o.id}')" class="p-4 bg-red-100 text-red-600 border-2 border-red-600 rounded-xl font-bold hover:bg-red-600 hover:text-white transition">🗑️</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        function deleteOrder(idx) {
+        function deleteOrder(id) {
             if (confirm("Clear this order from history?")) {
-                orders.splice(idx, 1);
-                localStorage.setItem('y2k_orders', JSON.stringify(orders));
-                renderOrders();
+                db.collection('orders').doc(id).delete()
+                    .catch((err) => { console.error(err); alert('Delete failed, try again.'); });
             }
         }
 
@@ -368,46 +385,53 @@
 
         function closeAdminModal() { document.getElementById('form-modal').classList.add('hidden'); }
 
-        function saveProduct() {
+        async function saveProduct() {
             const name = document.getElementById('p-name').value;
             const price = parseFloat(document.getElementById('p-price').value);
             const desc = document.getElementById('p-desc').value;
             const category = document.getElementById('p-category').value;
-            const idx = parseInt(document.getElementById('edit-index').value);
+            const editId = document.getElementById('edit-index').value;
 
             if (!name || !price) { alert("Please fill Name and Price!"); return; }
 
-            const data = {
-                name,
-                price,
-                desc,
-                category,
-                img: selectedImageData || (idx > -1 ? products[idx].img : 'https://placehold.co/400x400?text=Nail')
-            };
-
-            if (idx > -1) products[idx] = data;
-            else products.unshift(data);
-
-            localStorage.setItem('y2k_products', JSON.stringify(products));
-            renderAdminProducts();
-            closeAdminModal();
-            alert("Success! The Frontend is updated! 🎀");
+            try {
+                if (editId) {
+                    // Update existing product. Only change the image if a new one was picked.
+                    const data = { name, price, desc, category };
+                    if (selectedImageData) data.img = selectedImageData;
+                    await db.collection('products').doc(editId).update(data);
+                } else {
+                    await db.collection('products').add({
+                        name, price, desc, category,
+                        img: selectedImageData || 'https://placehold.co/400x400?text=Nail',
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                closeAdminModal();
+                alert("Success! The Shop is updated! 🎀");
+            } catch (err) {
+                console.error('Save failed:', err);
+                alert("Save failed. Please check your internet and try again.");
+            }
         }
 
-        function editProduct(index) {
-            const p = products[index];
+        function editProduct(id) {
+            const p = products.find((x) => x.id === id);
+            if (!p) return;
             document.getElementById('form-title').innerText = "Edit Product";
-            document.getElementById('edit-index').value = index;
+            document.getElementById('edit-index').value = id;
             document.getElementById('p-name').value = p.name;
             document.getElementById('p-price').value = p.price;
             document.getElementById('p-desc').value = p.desc;
             document.getElementById('p-category').value = p.category;
+            document.getElementById('p-file').value = "";
+            selectedImageData = "";
             document.getElementById('form-modal').classList.remove('hidden');
         }
 
         function resetForm() {
             document.getElementById('form-title').innerText = "Add New Product";
-            document.getElementById('edit-index').value = "-1";
+            document.getElementById('edit-index').value = "";
             document.getElementById('p-name').value = "";
             document.getElementById('p-price').value = "";
             document.getElementById('p-desc').value = "";
@@ -415,11 +439,10 @@
             selectedImageData = "";
         }
 
-        function deleteProduct(index) {
+        function deleteProduct(id) {
             if (confirm("Are you sure you want to delete this product?")) {
-                products.splice(index, 1);
-                localStorage.setItem('y2k_products', JSON.stringify(products));
-                renderAdminProducts();
+                db.collection('products').doc(id).delete()
+                    .catch((err) => { console.error(err); alert('Delete failed, try again.'); });
             }
         }
     </script>

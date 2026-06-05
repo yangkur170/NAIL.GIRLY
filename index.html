@@ -7,6 +7,11 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/framer-motion/10.16.4/framer-motion.umd.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Space+Grotesk:wght@300;500;700&display=swap" rel="stylesheet">
+
+    <!-- Firebase (real-time database for products & orders) -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="firebase-config.js"></script>
     
     <style>
         :root {
@@ -311,38 +316,23 @@
     </footer>
 
     <script>
-        // --- Product Data ---
-        let baseProducts = [
-            { name: 'Milk Marble Pink', price: 22.00, desc: 'Modern Y2K Aesthetic', img: 'https://placehold.co/400x400/FFD1E3/FF8AD8?text=Soft+Nails', category: 'Milk Creamy' },
-            { name: 'Cyber Blue Star', price: 18.50, desc: 'Holographic Finish', img: 'https://placehold.co/400x400/A0E9FF/333?text=Blue+Chrome', category: 'Cyber Chrome' },
-            { name: 'Creamy Pearl', price: 25.00, desc: 'Elegant & Clean', img: 'https://placehold.co/400x400/FFF9FB/FF8AD8?text=Creamy+White', category: 'Milk Creamy' },
-            { name: 'Pink Heart 3D', price: 20.00, desc: 'Kawaii Y2K Style', img: 'https://placehold.co/400x400/E3D1FF/333?text=Heart+Nails', category: 'Pink Butterfly' }
-        ];
-
-        // Generate 200 products if localStorage is empty or has less than 200
-        const categoriesForGeneration = ["Cyber Chrome", "Milk Creamy", "Pink Butterfly"];
-        let categoryGenIndex = 0;
-        if (baseProducts.length < 200) {
-            for (let i = baseProducts.length + 1; i <= 200; i++) {
-                baseProducts.push({
-                    name: `Nail Style #${i}`,
-                    price: parseFloat((12 + Math.random() * 18).toFixed(2)),
-                    desc: 'Modern Y2K Aesthetic Supply',
-                    img: `https://placehold.co/400x400/FFD1E3/FF8AD8?text=Style+${i}`,
-                    category: categoriesForGeneration[categoryGenIndex % categoriesForGeneration.length]
-                });
-                categoryGenIndex++;
-            }
-        }
-
-        let products = JSON.parse(localStorage.getItem('y2k_products')) || baseProducts;
+        // --- Product Data (live from Firestore) ---
+        let products = [];
         let cart = [];
         let selectedImageData = ""; // To store base64 image data
         let currentFilterCategory = "All Styles"; // Default filter
 
+        // Listen for products in real-time. Whatever the Admin adds shows up here.
+        db.collection('products').orderBy('createdAt', 'asc').onSnapshot((snap) => {
+            products = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+            renderProducts();
+        }, (err) => {
+            console.error('Failed to load products:', err);
+        });
+
         // --- Initialization ---
-        window.onload = () => { 
-            renderProducts(); 
+        window.onload = () => {
+            renderProducts();
             updateCart();
             setupCategoryFilters();
             updateCategoryPillStyles();
@@ -418,36 +408,42 @@
             document.getElementById('checkout-step-' + step).classList.remove('hidden');
         }
 
-        function confirmCheckout() {
+        async function confirmCheckout() {
             const receiptInput = document.getElementById('receipt-file');
             if (!receiptInput.files[0]) {
                 showCustomAlert('Payment!', 'Missing Receipt', 'Please upload your receipt to confirm! ✨', '💰');
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const newOrder = {
-                    id: Date.now(),
+            const confirmBtn = document.querySelector('#checkout-step-2 button[onclick="confirmCheckout()"]');
+            const originalText = confirmBtn ? confirmBtn.innerText : '';
+            if (confirmBtn) { confirmBtn.disabled = true; confirmBtn.innerText = 'Sending...'; }
+
+            try {
+                // Shrink the receipt so it fits inside a Firestore document.
+                const receiptData = await compressImage(receiptInput.files[0], 1000, 0.6);
+
+                await db.collection('orders').add({
                     name: document.getElementById('checkout-name').value,
                     phone: document.getElementById('checkout-phone').value,
                     city: document.getElementById('checkout-city').value,
                     location: userCoordinates || 'Not Pinned',
                     items: [...cart],
                     total: document.getElementById('cart-total').innerText,
-                    receipt: e.target.result,
-                    date: new Date().toLocaleString()
-                };
+                    receipt: receiptData,
+                    date: new Date().toLocaleString(),
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
 
-                let orders = JSON.parse(localStorage.getItem('y2k_orders')) || [];
-                orders.unshift(newOrder);
-                localStorage.setItem('y2k_orders', JSON.stringify(orders));
-                
                 cart = [];
                 updateCart();
                 goToCheckoutStep(3);
-            };
-            reader.readAsDataURL(receiptInput.files[0]);
+            } catch (err) {
+                console.error('Order failed:', err);
+                showCustomAlert('Oops!', 'Order Failed', 'Please check your internet and try again. 🌸', '😢');
+            } finally {
+                if (confirmBtn) { confirmBtn.disabled = false; confirmBtn.innerText = originalText; }
+            }
         }
 
         // --- Core Functions ---
