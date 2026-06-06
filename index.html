@@ -15,10 +15,12 @@
     
     <style>
         :root {
-            --milk: #FFFDF5;
-            --y2k-pink: #FF8AD8;
-            --soft-pink: #FFD1E3;
-            --accent-blue: #A0E9FF;
+            --milk: #F5F6F8;            /* cool white */
+            --y2k-pink: #8A9099;        /* main silver accent */
+            --soft-pink: #D7DBE0;       /* light silver (shadows) */
+            --accent-blue: #B4B9C1;     /* secondary silver */
+            --ink: #1F2329;             /* near-black text */
+            --chrome: linear-gradient(135deg, #EDEEF0 0%, #B9BEC6 20%, #F4F5F7 42%, #A2A8B0 60%, #DCDEE2 80%, #9CA1A9 100%);
         }
 
         body {
@@ -51,8 +53,10 @@
         }
 
         .y2k-btn {
-            background: var(--y2k-pink);
+            background: var(--chrome);
+            color: var(--ink) !important;
             box-shadow: 4px 4px 0px #000;
+            border: 2px solid #000;
             transition: 0.2s;
         }
 
@@ -79,11 +83,12 @@
         .marquee {
             overflow: hidden;
             white-space: nowrap;
-            background: var(--y2k-pink);
+            background: var(--chrome);
             padding: 10px 0;
             border-top: 2px solid #000;
             border-bottom: 2px solid #000;
         }
+        .animate-marquee { color: var(--ink) !important; }
         
         .animate-marquee {
             display: inline-block;
@@ -110,6 +115,29 @@
         }
         .animate-pop {
             animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        /* ===== Silver Chrome theme overrides (maps old pink/blue to silver) ===== */
+        .text-pink-500 { color: #6E747C !important; }
+        .text-pink-400 { color: #9CA1A9 !important; }
+        .text-blue-400 { color: #9CA1A9 !important; }
+        .hover\:text-pink-500:hover { color: #3A3F47 !important; }
+        .bg-pink-500 { background-color: #6E747C !important; }
+        .bg-pink-100 { background-color: #ECEEF1 !important; }
+        .bg-pink-50  { background-color: #F2F3F5 !important; }
+        .border-pink-500 { border-color: #9CA1A9 !important; }
+        .border-pink-400 { border-color: #B4B9C1 !important; }
+        .border-pink-200 { border-color: #DDE0E4 !important; }
+        .bg-blue-400 { background-color: #8A9099 !important; }
+        .hover\:bg-blue-500:hover { background-color: #6E747C !important; }
+        .hover\:bg-pink-50:hover { background-color: #F2F3F5 !important; }
+        /* Chrome shimmer for the big logo */
+        nav .text-pink-500, nav .text-blue-400 {
+            background: var(--chrome);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(1px 1px 0 rgba(0,0,0,.25));
         }
     </style>
 </head>
@@ -156,10 +184,10 @@
     </div>
 
     <!-- Hero Section -->
-    <header class="py-16 px-6 text-center bg-[#FFF9FB]">
+    <header class="py-16 px-6 text-center bg-[#EEF0F3]">
         <h2 class="text-pink-400 uppercase font-bold tracking-[0.3em] mb-4">The Modern Supply for Cool Girls</h2>
         <h1 class="text-4xl sm:text-6xl md:text-8xl font-black italic mb-6 leading-tight">
-            SOFT <span class="text-transparent" style="-webkit-text-stroke: 1.5px #FF8AD8;">CREAMY</span> <br>VIBES
+            SOFT <span class="text-transparent" style="-webkit-text-stroke: 1.5px #9CA1A9;">CREAMY</span> <br>VIBES
         </h1>
         <div class="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 px-4">
             <button class="y2k-btn px-8 py-3 text-white font-bold uppercase text-sm sm:text-base">Shop Collection</button>
@@ -455,15 +483,16 @@
             }
 
             grid.innerHTML = productsToRender.map((p, index) => `
-                <div class="product-card p-4 rounded-3xl relative group">
-                    <div class="aspect-square bg-pink-100 rounded-2xl mb-4 overflow-hidden relative">
-                        <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                <div class="product-card p-3 rounded-3xl relative group flex flex-col">
+                    <div class="aspect-square bg-gray-100 rounded-2xl mb-4 overflow-hidden relative">
+                        <img src="${p.img}" alt="${p.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                        <span class="absolute top-3 left-3 text-[9px] font-bold uppercase tracking-widest bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full border border-black/10">${p.category}</span>
                     </div>
-                    <h3 class="font-bold text-lg">${p.name}</h3>
-                    <p class="text-gray-400 text-sm mb-4 italic">${p.desc}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xl font-black">$${p.price.toFixed(2)}</span>
-                        <button onclick="addToCart('${p.name}', ${p.price})" class="w-10 h-10 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition">+</button>
+                    <h3 class="font-bold text-base sm:text-lg leading-tight truncate">${p.name}</h3>
+                    <p class="text-gray-400 text-xs mb-4 italic truncate">${p.desc}</p>
+                    <div class="flex justify-between items-center mt-auto">
+                        <span class="text-lg sm:text-xl font-black tracking-tight">$${p.price.toFixed(2)}</span>
+                        <button onclick="addToCart('${p.name}', ${p.price})" class="w-9 h-9 sm:w-10 sm:h-10 rounded-full border-2 border-black flex items-center justify-center hover:bg-black hover:text-white transition text-lg leading-none">+</button>
                     </div>
                 </div>
             `).join('');

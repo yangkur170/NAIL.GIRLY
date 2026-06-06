@@ -13,10 +13,12 @@
     <script src="firebase-config.js"></script>
     <style>
         :root {
-            --milk: #FFFDF5;
-            --y2k-pink: #FF8AD8;
-            --soft-pink: #FFD1E3;
-            --accent-blue: #A0E9FF;
+            --milk: #F5F6F8;            /* cool white */
+            --y2k-pink: #8A9099;        /* main silver accent */
+            --soft-pink: #D7DBE0;       /* light silver (shadows) */
+            --accent-blue: #B4B9C1;     /* secondary silver */
+            --ink: #1F2329;             /* near-black text */
+            --chrome: linear-gradient(135deg, #EDEEF0 0%, #B9BEC6 20%, #F4F5F7 42%, #A2A8B0 60%, #DCDEE2 80%, #9CA1A9 100%);
         }
 
         body {
@@ -39,11 +41,12 @@
         .marquee {
             overflow: hidden;
             white-space: nowrap;
-            background: var(--y2k-pink);
+            background: var(--chrome);
             padding: 10px 0;
             border-top: 2px solid #000;
             border-bottom: 2px solid #000;
         }
+        .animate-marquee { color: var(--ink) !important; }
         
         .animate-marquee {
             display: inline-block;
@@ -56,8 +59,10 @@
         }
 
         .y2k-btn {
-            background: var(--y2k-pink);
+            background: var(--chrome);
+            color: var(--ink) !important;
             box-shadow: 4px 4px 0px #000;
+            border: 2px solid #000;
             transition: 0.2s;
         }
 
@@ -90,6 +95,25 @@
         }
 
         .hidden { display: none; }
+
+        /* ===== Silver Chrome theme overrides (maps old pink/blue to silver) ===== */
+        .text-pink-500 { color: #6E747C !important; }
+        .text-pink-400 { color: #9CA1A9 !important; }
+        .text-blue-400 { color: #9CA1A9 !important; }
+        .hover\:text-pink-500:hover { color: #3A3F47 !important; }
+        .bg-pink-500 { background-color: #6E747C !important; }
+        .bg-pink-100 { background-color: #ECEEF1 !important; }
+        .bg-pink-50  { background-color: #F2F3F5 !important; }
+        .border-pink-400 { border-color: #B4B9C1 !important; }
+        .hover\:bg-pink-50:hover { background-color: #F2F3F5 !important; }
+        /* Chrome shimmer for the logo + hero title */
+        nav .text-pink-500, nav .text-blue-400 {
+            background: var(--chrome);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(1px 1px 0 rgba(0,0,0,.25));
+        }
     </style>
 </head>
 <body>
@@ -127,9 +151,9 @@
         </nav>
 
         <!-- Hero Section -->
-        <header class="py-12 px-6 text-center bg-[#FFF9FB] border-b border-black/5">
+        <header class="py-12 px-6 text-center bg-[#EEF0F3] border-b border-black/5">
             <h1 id="hero-title" class="text-4xl sm:text-5xl md:text-7xl font-black italic mb-4 uppercase leading-tight">
-                Inventory <span class="text-transparent" style="-webkit-text-stroke: 1.5px #FF8AD8;">Control</span>
+                Inventory <span class="text-transparent" style="-webkit-text-stroke: 1.5px #9CA1A9;">Control</span>
             </h1>
             <p id="inventory-subtext" class="font-bold text-gray-400 uppercase text-xs tracking-widest">Add or Edit your 2026 Collection below</p>
         </header>
@@ -162,7 +186,7 @@
 
     <!-- Form Modal (Integrated Like Frontend) -->
     <div id="form-modal" class="fixed inset-0 z-[600] hidden flex items-center justify-center p-4 backdrop-blur-sm bg-black/20">
-        <div class="bg-white w-full max-w-md rounded-[40px] p-6 sm:p-8 border-4 border-black shadow-[10px_10px_0px_#FF8AD8] relative max-h-[90vh] overflow-y-auto">
+        <div class="bg-white w-full max-w-md rounded-[40px] p-6 sm:p-8 border-4 border-black shadow-[10px_10px_0px_#B9BEC6] relative max-h-[90vh] overflow-y-auto">
             <h2 id="form-title" class="text-3xl font-black italic uppercase mb-8 text-pink-500 text-center">Add Product</h2>
             <input type="hidden" id="edit-index" value="">
             <div class="space-y-4">
@@ -312,19 +336,20 @@
 
             grid.innerHTML = filteredProducts.map((p) => {
                 return `
-                <div class="product-card p-4 rounded-3xl relative group">
+                <div class="product-card p-3 rounded-3xl relative group flex flex-col">
                     <div class="absolute top-2 right-2 z-20 flex gap-2 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button onclick="editProduct('${p.id}')" class="bg-yellow-400 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] text-sm">✏️</button>
                         <button onclick="deleteProduct('${p.id}')" class="bg-red-400 p-2 rounded-lg border-2 border-black shadow-[2px_2px_0px_#000] text-sm">🗑️</button>
                     </div>
-                    <div class="aspect-square bg-pink-100 rounded-2xl mb-4 overflow-hidden relative">
-                        <img src="${p.img}" alt="${p.name}" class="w-full h-full object-cover group-hover:scale-110 transition duration-500">
+                    <div class="aspect-square bg-gray-100 rounded-2xl mb-4 overflow-hidden relative">
+                        <img src="${p.img}" alt="${p.name}" loading="lazy" class="w-full h-full object-cover group-hover:scale-105 transition duration-700">
+                        <span class="absolute top-3 left-3 text-[9px] font-bold uppercase tracking-widest bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full border border-black/10">${p.category}</span>
                     </div>
-                    <h3 class="font-bold text-lg">${p.name}</h3>
-                    <p class="text-gray-400 text-sm mb-4 italic">${p.desc}</p>
-                    <div class="flex justify-between items-center">
-                        <span class="text-xl font-black">$${p.price.toFixed(2)}</span>
-                        <span class="text-xs font-bold uppercase text-gray-500">${p.category}</span>
+                    <h3 class="font-bold text-base sm:text-lg leading-tight truncate">${p.name}</h3>
+                    <p class="text-gray-400 text-xs mb-4 italic truncate">${p.desc}</p>
+                    <div class="flex justify-between items-center mt-auto">
+                        <span class="text-lg sm:text-xl font-black tracking-tight">$${p.price.toFixed(2)}</span>
+                        <span class="text-[10px] font-bold uppercase text-gray-500">${p.category}</span>
                     </div>
                 </div>
             `;
